@@ -51,9 +51,9 @@ class MenuApp {
     // 初始化应用
     init() {
         this.setupEventListeners();
+        this.updateCategorySelect();
         this.renderDishLibrary();
         this.renderMenuCalendar();
-        this.updateCategorySelect();
     }
 
     // 设置事件监听器
@@ -635,8 +635,15 @@ class MenuApp {
         }
         const menu = this.menus[date];
         
+        // 检查是否已存在菜单模态框，如果存在则移除
+        const existingModal = document.getElementById('menu-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
         // 创建菜单模态框
         const modal = document.createElement('div');
+        modal.id = 'menu-modal';
         modal.className = 'modal active';
         
         // 根据meal参数决定显示哪些餐次
@@ -825,9 +832,9 @@ class MenuApp {
             modal.remove();
         });
         
-        // 添加菜品点击事件
-        modal.querySelectorAll('.dish-select-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        // 事件委托处理菜品选择
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('dish-select-btn')) {
                 const targetMeal = e.target.dataset.meal;
                 const dishId = e.target.dataset.dishId;
                 const dish = this.dishes.find(d => d.id === dishId);
@@ -837,24 +844,14 @@ class MenuApp {
                     modal.remove();
                     this.openMenuModal(date, meal); // 重新渲染模态框，保持当前餐次选择
                 }
-            });
-        });
-        
-        // 删除菜品点击事件
-        modal.querySelectorAll('.remove-dish').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            } else if (e.target.classList.contains('remove-dish')) {
                 const targetMeal = e.target.dataset.meal;
                 const dishName = e.target.dataset.dish;
                 menu[targetMeal] = menu[targetMeal].filter(d => d !== dishName);
                 // 重新渲染模态框前先移除当前模态框
                 modal.remove();
                 this.openMenuModal(date, meal); // 重新渲染模态框，保持当前餐次选择
-            });
-        });
-        
-        // 随机添加菜品事件
-        modal.querySelectorAll('.random-dish-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            } else if (e.target.classList.contains('random-dish-btn')) {
                 const targetMeal = e.target.dataset.meal;
                 
                 // 根据餐次过滤可用菜品
@@ -891,12 +888,8 @@ class MenuApp {
                 // 重新渲染模态框
                 modal.remove();
                 this.openMenuModal(date, meal);
-            });
-        });
-        
-        // 为菜单模态框添加点击外部关闭事件的专属处理
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+            } else if (e.target === modal) {
+                // 点击模态框外部关闭
                 modal.remove();
             }
         });
@@ -930,26 +923,26 @@ class MenuApp {
                 const data = JSON.parse(e.target.result);
                 
                 if (confirm('确定要导入数据吗？这将覆盖现有数据。')) {
-                if (data.dishes) {
-                    this.dishes = data.dishes;
-                    this.saveData('dishes', this.dishes);
-                }
-                if (data.menus) {
-                    this.menus = data.menus;
-                    this.saveData('menus', this.menus);
-                }
-                if (data.categories) {
-                    this.categories = data.categories;
-                    this.saveData('categories', this.categories);
-                    this.updateCategorySelect();
-                }
+                    if (data.dishes) {
+                        this.dishes = data.dishes;
+                        this.saveData('dishes', this.dishes);
+                    }
+                    if (data.menus) {
+                        this.menus = data.menus;
+                        this.saveData('menus', this.menus);
+                    }
+                    if (data.categories) {
+                        this.categories = data.categories;
+                        this.saveData('categories', this.categories);
+                        this.updateCategorySelect();
+                    }
 
-                // 重新渲染所有组件
-                this.renderDishLibrary();
-                this.renderMenuCalendar();
-                
-                alert('数据导入成功！');
-            }
+                    // 重新渲染所有组件
+                    this.renderDishLibrary();
+                    this.renderMenuCalendar();
+                    
+                    alert('数据导入成功！');
+                }
             } catch (e) {
                 alert('数据导入失败，请检查文件格式是否正确。');
             }
