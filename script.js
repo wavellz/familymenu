@@ -32,6 +32,12 @@ class MenuApp {
     // 从本地存储加载数据
     loadData(key, defaultValue) {
         try {
+            // 检查localStorage是否可用
+            if (typeof localStorage === 'undefined') {
+                console.warn('localStorage不可用，使用默认值');
+                return defaultValue;
+            }
+            
             const data = localStorage.getItem(key);
             return data ? JSON.parse(data) : defaultValue;
         } catch (e) {
@@ -43,6 +49,12 @@ class MenuApp {
     // 保存数据到本地存储
     saveData(key, data) {
         try {
+            // 检查localStorage是否可用
+            if (typeof localStorage === 'undefined') {
+                console.warn('localStorage不可用，无法保存数据');
+                return;
+            }
+            
             localStorage.setItem(key, JSON.stringify(data));
         } catch (e) {
             console.error('保存数据失败:', e);
@@ -1209,5 +1221,7 @@ class MenuApp {
     }
 }
 
-// 初始化应用
-const app = new MenuApp();
+// 确保DOM加载完成后再初始化应用
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new MenuApp();
+});
