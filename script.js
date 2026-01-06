@@ -129,17 +129,49 @@ class MenuApp {
             this.navigateDate(1);
         });
 
-        // 视图切换事件
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('view-btn')) {
-                this.switchView(e.target.dataset.view);
-            }
-        });
+        // 视图切换事件 - 使用直接事件监听而非事件委托
+        const viewBtns = document.querySelectorAll('.view-btn');
+        if (viewBtns.length > 0) {
+            viewBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const view = e.target.dataset.view;
+                    this.switchView(view);
+                });
+            });
+        } else {
+            // 如果视图按钮还没有被渲染，等待DOM更新后再添加事件监听
+            setTimeout(() => {
+                const delayedBtns = document.querySelectorAll('.view-btn');
+                delayedBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const view = e.target.dataset.view;
+                        this.switchView(view);
+                    });
+                });
+            }, 100);
+        }
         
         // 月份显示区域点击事件 - 打开日期选择器
-        document.getElementById('current-month').addEventListener('click', () => {
-            this.openDatePickerModal();
-        });
+        const monthDisplay = document.getElementById('current-month');
+        if (monthDisplay) {
+            monthDisplay.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openDatePickerModal();
+            });
+        } else {
+            // 如果月份显示区域还没有被渲染，等待DOM更新后再添加事件监听
+            setTimeout(() => {
+                const delayedMonthDisplay = document.getElementById('current-month');
+                if (delayedMonthDisplay) {
+                    delayedMonthDisplay.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.openDatePickerModal();
+                    });
+                }
+            }, 100);
+        }
         
         // 日期选择弹窗事件
         document.getElementById('close-date-picker-modal').addEventListener('click', () => {

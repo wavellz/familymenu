@@ -637,9 +637,13 @@ body {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: clamp(8px, 1.5vw, 10px);
-    margin-top: clamp(12px, 2vw, 15px);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-auto-rows: auto;
+    gap: clamp(5px, 1vw, 8px);
+    margin-top: clamp(10px, 1.5vw, 15px);
+    width: 100%;
+    overflow: visible;
+    box-sizing: border-box;
 }
 
 .calendar-header {
