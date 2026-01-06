@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭菜单小应用</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 头部 -->
+        <header class="app-header">
+            <h1 class="app-title">🍽️ 家庭菜单</h1>
+            <nav class="app-nav">
+            <button class="nav-btn active" data-tab="dish-library">菜品库</button>
+            <button class="nav-btn" data-tab="menu-calendar">菜单日历</button>
+            <button class="nav-btn" data-tab="settings">设置</button>
+        </nav>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="app-main">
+            <!-- 菜品库模块 -->
+            <section id="dish-library" class="tab-content active">
+                <div class="section-header">
+                    <h2>菜品库</h2>
+                    <div class="search-add">
+                        <input type="text" id="dish-search" placeholder="搜索菜品..." class="search-input">
+                        <button id="add-dish-btn" class="primary-btn">+ 新增菜品</button>
+                    </div>
+                </div>
+
+                <!-- 分类标签 -->
+                <div class="category-tags" id="category-tags">
+                    <button class="category-tag active" data-category="all">全部</button>
+                    <button class="category-tag" data-category="肉类">肉类</button>
+                    <button class="category-tag" data-category="蔬菜类">蔬菜类</button>
+                    <button class="category-tag" data-category="汤类">汤类</button>
+                    <button id="add-category-btn" class="category-tag add-category">+ 自定义</button>
+                </div>
+
+                <!-- 菜品卡片列表 -->
+                <div class="dish-grid" id="dish-grid">
+                    <!-- 菜品卡片将通过JavaScript动态生成 -->
+                </div>
+            </section>
+
+            <!-- 菜单日历模块 -->
+            <section id="menu-calendar" class="tab-content">
+                <div class="section-header">
+                    <h2>菜单日历</h2>
+                    <div class="calendar-controls">
+                        <button id="prev-month" class="control-btn">‹</button>
+                        <span id="current-month" class="month-display"></span>
+                        <button id="next-month" class="control-btn">›</button>
+                    </div>
+                </div>
+
+                <!-- 日历视图 -->
+                <div class="calendar-container" id="calendar-container">
+                    <!-- 日历将通过JavaScript动态生成 -->
+                </div>
+            </section>
+
+            <!-- 设置模块 -->
+            <section id="settings" class="tab-content">
+                <div class="section-header">
+                    <h2>设置</h2>
+                </div>
+
+                <div class="settings-content">
+                    <div class="setting-item">
+                        <h3>数据管理</h3>
+                        <div class="setting-buttons">
+                            <button id="export-data-btn" class="secondary-btn">📤 导出数据</button>
+                            <button id="import-data-btn" class="secondary-btn">📥 导入数据</button>
+                            <input type="file" id="import-file" accept=".json" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 新增菜品弹窗 -->
+    <div id="dish-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">新增菜品</h3>
+                <button class="close-btn" id="close-dish-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="dish-name">菜品名称</label>
+                    <input type="text" id="dish-name" placeholder="请输入菜品名称" required>
+                </div>
+                <div class="form-group">
+                    <label for="dish-category">分类</label>
+                    <select id="dish-category">
+                        <option value="肉类">肉类</option>
+                        <option value="蔬菜类">蔬菜类</option>
+                        <option value="汤类">汤类</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-dish-btn" class="primary-btn">保存</button>
+                <button id="save-continue-dish-btn" class="secondary-btn">保存并继续添加</button>
+                <button id="cancel-dish-btn" class="secondary-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增分类弹窗 -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新增分类</h3>
+                <button class="close-btn" id="close-category-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="category-name">分类名称</label>
+                    <input type="text" id="category-name" placeholder="请输入分类名称" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-category-btn" class="primary-btn">保存</button>
+                <button id="cancel-category-btn" class="secondary-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
