@@ -24,6 +24,7 @@ class MenuApp {
         this.currentTab = 'dish-library';
         this.currentDate = new Date();
         this.editingDishId = null;
+        this.currentView = 'month'; // 月视图、周视图、日视图
         
         this.init();
     }
@@ -109,13 +110,43 @@ class MenuApp {
 
         // 菜单日历事件
         document.getElementById('prev-month').addEventListener('click', () => {
-            this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-            this.renderMenuCalendar();
+            this.navigateDate(-1);
         });
 
         document.getElementById('next-month').addEventListener('click', () => {
-            this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-            this.renderMenuCalendar();
+            this.navigateDate(1);
+        });
+
+        // 视图切换事件
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('view-btn')) {
+                this.switchView(e.target.dataset.view);
+            }
+        });
+        
+        // 月份显示区域点击事件 - 打开日期选择器
+        document.getElementById('current-month').addEventListener('click', () => {
+            this.openDatePickerModal();
+        });
+        
+        // 日期选择弹窗事件
+        document.getElementById('close-date-picker-modal').addEventListener('click', () => {
+            this.closeDatePickerModal();
+        });
+        
+        document.getElementById('cancel-date-btn').addEventListener('click', () => {
+            this.closeDatePickerModal();
+        });
+        
+        document.getElementById('confirm-date-btn').addEventListener('click', () => {
+            this.confirmDate();
+        });
+        
+        // 点击模态框外部关闭
+        document.getElementById('date-picker-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('date-picker-modal')) {
+                this.closeDatePickerModal();
+            }
         });
 
         // 设置事件
@@ -544,16 +575,77 @@ class MenuApp {
         });
     }
 
-    // 渲染菜单日历
+    // 日期导航
+    navigateDate(direction) {
+        const currentDate = new Date(this.currentDate);
+        
+        switch (this.currentView) {
+            case 'day':
+                currentDate.setDate(currentDate.getDate() + direction);
+                break;
+            case 'week':
+                currentDate.setDate(currentDate.getDate() + (direction * 7));
+                break;
+            case 'month':
+            default:
+                currentDate.setMonth(currentDate.getMonth() + direction);
+                break;
+        }
+        
+        this.currentDate = currentDate;
+        this.renderMenuCalendar();
+    }
+
+    // 切换视图
+    switchView(view) {
+        this.currentView = view;
+        
+        // 更新视图按钮状态
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-view="${view}"]`).classList.add('active');
+        
+        // 重新渲染日历
+        this.renderMenuCalendar();
+    }
+
+    // 渲染菜单日历 - 支持月/周/日视图
     renderMenuCalendar() {
         const container = document.getElementById('calendar-container');
         const monthDisplay = document.getElementById('current-month');
         
         const year = this.currentDate.getFullYear();
         const month = this.currentDate.getMonth();
+        const day = this.currentDate.getDate();
         
-        monthDisplay.textContent = `${year}年${month + 1}月`;
+        // 更新标题显示
+        if (this.currentView === 'day') {
+            monthDisplay.textContent = `${year}年${month + 1}月${day}日`;
+        } else if (this.currentView === 'week') {
+            // 计算本周第一天和最后一天
+            const firstDayOfWeek = new Date(year, month, day);
+            const dayOfWeek = firstDayOfWeek.getDay();
+            firstDayOfWeek.setDate(day - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+            monthDisplay.textContent = `${year}年${month + 1}月${firstDayOfWeek.getDate()}-${lastDayOfWeek.getDate()}日`;
+        } else {
+            monthDisplay.textContent = `${year}年${month + 1}月`;
+        }
 
+        // 根据当前视图渲染不同的日历
+        if (this.currentView === 'day') {
+            this.renderDayView(container, year, month, day);
+        } else if (this.currentView === 'week') {
+            this.renderWeekView(container, year, month, day);
+        } else {
+            this.renderMonthView(container, year, month);
+        }
+    }
+
+    // 渲染月视图
+    renderMonthView(container, year, month) {
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysInPrevMonth = new Date(year, month, 0).getDate();
@@ -568,6 +660,7 @@ class MenuApp {
         // 上个月的日期
         for (let i = firstDay - 1; i >= 0; i--) {
             const day = daysInPrevMonth - i;
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             calendarHtml += `<div class="calendar-day other-month">
                 <div class="day-number">${day}</div>
             </div>`;
@@ -611,6 +704,160 @@ class MenuApp {
         container.innerHTML = calendarHtml;
 
         // 添加餐次点击事件
+        this.addMealClickEvents();
+    }
+
+    // 渲染周视图 - 竖向排列
+    renderWeekView(container, year, month, day) {
+        // 计算本周第一天
+        const firstDayOfWeek = new Date(year, month, day);
+        const dayOfWeek = firstDayOfWeek.getDay();
+        firstDayOfWeek.setDate(day - dayOfWeek);
+        
+        let calendarHtml = '<div class="week-view-container">';
+        
+        // 渲染本周的7天 - 竖向排列
+        for (let i = 0; i < 7; i++) {
+            const currentDate = new Date(firstDayOfWeek);
+            currentDate.setDate(firstDayOfWeek.getDate() + i);
+            
+            const dateYear = currentDate.getFullYear();
+            const dateMonth = currentDate.getMonth();
+            const dateDay = currentDate.getDate();
+            const dateStr = `${dateYear}-${String(dateMonth + 1).padStart(2, '0')}-${String(dateDay).padStart(2, '0')}`;
+            
+            const menu = this.menus[dateStr] || { breakfast: [], lunch: [], dinner: [] };
+            const isToday = new Date().toDateString() === currentDate.toDateString();
+            const isCurrentMonth = dateMonth === month;
+            
+            const hasBreakfast = menu.breakfast.length > 0;
+            const hasLunch = menu.lunch.length > 0;
+            const hasDinner = menu.dinner.length > 0;
+            
+            // 星期几
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const dayName = weekdays[i];
+            
+            calendarHtml += `<div class="week-day-item ${isToday ? 'today' : ''} ${isCurrentMonth ? '' : 'other-month'}" data-date="${dateStr}">
+                <div class="week-day-header">
+                    <span class="week-day-name">${dayName}</span>
+                    <span class="week-day-number">${dateDay}</span>
+                </div>
+                <div class="meal-indicators">
+                    <div class="meal-indicator breakfast ${hasBreakfast ? 'has-dishes' : ''}" data-meal="breakfast">
+                        <span class="meal-icon">🍞</span>
+                        <span class="meal-text">早餐</span>
+                        <div class="dish-list">${hasBreakfast ? menu.breakfast.join('、') : ''}</div>
+                    </div>
+                    <div class="meal-indicator lunch ${hasLunch ? 'has-dishes' : ''}" data-meal="lunch">
+                        <span class="meal-icon">🍚</span>
+                        <span class="meal-text">午餐</span>
+                        <div class="dish-list">${hasLunch ? menu.lunch.join('、') : ''}</div>
+                    </div>
+                    <div class="meal-indicator dinner ${hasDinner ? 'has-dishes' : ''}" data-meal="dinner">
+                        <span class="meal-icon">🌙</span>
+                        <span class="meal-text">晚餐</span>
+                        <div class="dish-list">${hasDinner ? menu.dinner.join('、') : ''}</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+        
+        calendarHtml += '</div>';
+        container.innerHTML = calendarHtml;
+        
+        // 添加餐次点击事件
+        this.addMealClickEvents();
+        
+        // 添加日期点击修改功能
+        container.querySelectorAll('.week-day-item').forEach(dayItem => {
+            dayItem.addEventListener('click', (e) => {
+                // 避免与餐次点击事件冲突
+                if (!e.target.closest('.meal-indicator')) {
+                    const dateStr = dayItem.dataset.date;
+                    // 设置当前日期并切换到日视图
+                    this.currentDate = new Date(dateStr);
+                    this.switchView('day');
+                }
+            });
+        });
+    }
+
+    // 渲染日视图
+    renderDayView(container, year, month, day) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const menu = this.menus[dateStr] || { breakfast: [], lunch: [], dinner: [] };
+        
+        let calendarHtml = '<div class="day-view-container">';
+        
+        const meals = [
+            { key: 'breakfast', name: '早餐', icon: '🍞', dishes: menu.breakfast },
+            { key: 'lunch', name: '午餐', icon: '🍚', dishes: menu.lunch },
+            { key: 'dinner', name: '晚餐', icon: '🌙', dishes: menu.dinner }
+        ];
+        
+        meals.forEach(meal => {
+            calendarHtml += `<div class="day-meal-section">
+                <div class="day-meal-header">
+                    <h3>${meal.icon} ${meal.name}</h3>
+                    <button class="primary-btn add-meal-btn" data-date="${dateStr}" data-meal="${meal.key}">+ 添加菜品</button>
+                </div>
+                <div class="day-meal-content">
+                    ${meal.dishes.length > 0 ? 
+                        `<div class="day-dish-list">
+                            ${meal.dishes.map(dish => `<div class="day-dish-item">${dish}</div>`).join('')}
+                        </div>` : 
+                        `<div class="no-dishes">暂无菜品，点击添加</div>`
+                    }
+                </div>
+            </div>`;
+        });
+        
+        calendarHtml += '</div>';
+        container.innerHTML = calendarHtml;
+        
+        // 添加添加菜品按钮事件
+        container.querySelectorAll('.add-meal-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const date = e.target.dataset.date;
+                const meal = e.target.dataset.meal;
+                this.openMenuModal(date, meal);
+            });
+        });
+    }
+
+    // 打开日期选择弹窗
+    openDatePickerModal() {
+        const modal = document.getElementById('date-picker-modal');
+        const dateInput = document.getElementById('date-picker-input');
+        
+        // 设置默认日期为当前选择的日期
+        const formattedDate = this.currentDate.toISOString().split('T')[0];
+        dateInput.value = formattedDate;
+        
+        modal.classList.add('active');
+    }
+    
+    // 关闭日期选择弹窗
+    closeDatePickerModal() {
+        const modal = document.getElementById('date-picker-modal');
+        modal.classList.remove('active');
+    }
+    
+    // 确认日期选择
+    confirmDate() {
+        const dateInput = document.getElementById('date-picker-input');
+        const selectedDate = new Date(dateInput.value);
+        
+        if (selectedDate) {
+            this.currentDate = selectedDate;
+            this.renderMenuCalendar();
+            this.closeDatePickerModal();
+        }
+    }
+    
+    // 添加餐次点击事件的通用方法
+    addMealClickEvents() {
         document.querySelectorAll('.calendar-day:not(.other-month)').forEach(dayEl => {
             // 为每个餐次指示器添加点击事件
             dayEl.querySelectorAll('.meal-indicator').forEach(mealIndicator => {
@@ -619,6 +866,17 @@ class MenuApp {
                     const meal = mealIndicator.dataset.meal;
                     this.openMenuModal(date, meal);
                 });
+            });
+            
+            // 为日期添加点击修改功能
+            dayEl.addEventListener('click', (e) => {
+                // 避免与餐次点击事件冲突
+                if (!e.target.closest('.meal-indicator')) {
+                    const dateStr = dayEl.dataset.date;
+                    // 设置当前日期并切换到日视图
+                    this.currentDate = new Date(dateStr);
+                    this.switchView('day');
+                }
             });
         });
     }

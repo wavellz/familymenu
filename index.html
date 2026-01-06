@@ -51,8 +51,13 @@
                     <h2>菜单日历</h2>
                     <div class="calendar-controls">
                         <button id="prev-month" class="control-btn">‹</button>
-                        <span id="current-month" class="month-display"></span>
+                        <div id="current-month" class="month-display clickable" title="点击选择日期"></div>
                         <button id="next-month" class="control-btn">›</button>
+                        <div class="view-switcher">
+                            <button class="view-btn active" data-view="month">月</button>
+                            <button class="view-btn" data-view="week">周</button>
+                            <button class="view-btn" data-view="day">日</button>
+                        </div>
                     </div>
                 </div>
 
@@ -127,6 +132,26 @@
             <div class="modal-footer">
                 <button id="save-category-btn" class="primary-btn">保存</button>
                 <button id="cancel-category-btn" class="secondary-btn">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 日期选择弹窗 -->
+    <div id="date-picker-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>选择日期</h3>
+                <button class="close-btn" id="close-date-picker-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="date-picker-input">请选择或输入日期</label>
+                    <input type="date" id="date-picker-input" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-date-btn" class="primary-btn">确定</button>
+                <button id="cancel-date-btn" class="secondary-btn">取消</button>
             </div>
         </div>
     </div>
