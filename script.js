@@ -821,19 +821,6 @@ class MenuApp {
         
         // 添加餐次点击事件
         this.addMealClickEvents();
-        
-        // 添加日期点击修改功能
-        container.querySelectorAll('.week-day-item').forEach(dayItem => {
-            dayItem.addEventListener('click', (e) => {
-                // 避免与餐次点击事件冲突
-                if (!e.target.closest('.meal-indicator')) {
-                    const dateStr = dayItem.dataset.date;
-                    // 设置当前日期并切换到日视图
-                    this.currentDate = new Date(dateStr);
-                    this.switchView('day');
-                }
-            });
-        });
     }
 
     // 渲染日视图
@@ -911,6 +898,7 @@ class MenuApp {
     
     // 添加餐次点击事件的通用方法
     addMealClickEvents() {
+        // 处理月视图的餐次点击事件
         document.querySelectorAll('.calendar-day:not(.other-month)').forEach(dayEl => {
             // 为每个餐次指示器添加点击事件
             dayEl.querySelectorAll('.meal-indicator').forEach(mealIndicator => {
@@ -920,16 +908,16 @@ class MenuApp {
                     this.openMenuModal(date, meal);
                 });
             });
-            
-            // 为日期添加点击修改功能
-            dayEl.addEventListener('click', (e) => {
-                // 避免与餐次点击事件冲突
-                if (!e.target.closest('.meal-indicator')) {
-                    const dateStr = dayEl.dataset.date;
-                    // 设置当前日期并切换到日视图
-                    this.currentDate = new Date(dateStr);
-                    this.switchView('day');
-                }
+        });
+        
+        // 处理周日视图的餐次点击事件
+        document.querySelectorAll('.week-day-item').forEach(dayItem => {
+            dayItem.querySelectorAll('.meal-indicator').forEach(mealIndicator => {
+                mealIndicator.addEventListener('click', () => {
+                    const date = dayItem.dataset.date;
+                    const meal = mealIndicator.dataset.meal;
+                    this.openMenuModal(date, meal);
+                });
             });
         });
     }
