@@ -20,6 +20,12 @@ class MenuApp {
                 this.categories.push(dish.category);
             }
         });
+        
+        // 如果菜品为空，自动生成一些初始菜品
+        if (this.dishes.length === 0) {
+            this.generateInitialDishes();
+        }
+        
         this.saveData('categories', this.categories);
         
         this.currentTab = 'menu-calendar';
@@ -674,6 +680,45 @@ class MenuApp {
             option.textContent = category;
             select.appendChild(option);
         });
+    }
+    
+    // 生成初始菜品数据
+    generateInitialDishes() {
+        const initialDishes = [
+            // 肉类
+            { id: '1', name: '红烧肉', category: '肉类', createdAt: new Date().toISOString() },
+            { id: '2', name: '宫保鸡丁', category: '肉类', createdAt: new Date().toISOString() },
+            { id: '3', name: '鱼香肉丝', category: '肉类', createdAt: new Date().toISOString() },
+            { id: '4', name: '糖醋排骨', category: '肉类', createdAt: new Date().toISOString() },
+            { id: '5', name: '可乐鸡翅', category: '肉类', createdAt: new Date().toISOString() },
+            
+            // 蔬菜类
+            { id: '6', name: '清炒西兰花', category: '蔬菜类', createdAt: new Date().toISOString() },
+            { id: '7', name: '西红柿炒鸡蛋', category: '蔬菜类', createdAt: new Date().toISOString() },
+            { id: '8', name: '麻婆豆腐', category: '蔬菜类', createdAt: new Date().toISOString() },
+            { id: '9', name: '炒青菜', category: '蔬菜类', createdAt: new Date().toISOString() },
+            { id: '10', name: '凉拌黄瓜', category: '蔬菜类', createdAt: new Date().toISOString() },
+            
+            // 汤类
+            { id: '11', name: '番茄蛋汤', category: '汤类', createdAt: new Date().toISOString() },
+            { id: '12', name: '排骨汤', category: '汤类', createdAt: new Date().toISOString() },
+            { id: '13', name: '鸡汤', category: '汤类', createdAt: new Date().toISOString() },
+            { id: '14', name: '海带汤', category: '汤类', createdAt: new Date().toISOString() },
+            { id: '15', name: '蔬菜汤', category: '汤类', createdAt: new Date().toISOString() },
+            
+            // 早餐类
+            { id: '16', name: '豆浆油条', category: '早餐', createdAt: new Date().toISOString() },
+            { id: '17', name: '包子馒头', category: '早餐', createdAt: new Date().toISOString() },
+            { id: '18', name: '鸡蛋灌饼', category: '早餐', createdAt: new Date().toISOString() },
+            { id: '19', name: '粥品', category: '早餐', createdAt: new Date().toISOString() },
+            { id: '20', name: '面包牛奶', category: '早餐', createdAt: new Date().toISOString() }
+        ];
+        
+        // 设置初始菜品
+        this.dishes = initialDishes;
+        
+        // 保存到本地存储
+        this.saveData('dishes', this.dishes);
     }
 
     // 日期导航
