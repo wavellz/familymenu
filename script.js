@@ -926,10 +926,12 @@ class MenuApp {
         // 将字符串日期转换为Date对象
         const currentDate = new Date(currentDateStr);
         
-        // 计算检测的时间范围
+        // 计算检测的时间范围（向前和向后）
         const daysToCheck = this.duplicateDays;
         const startDate = new Date(currentDate);
         startDate.setDate(startDate.getDate() - daysToCheck);
+        const endDate = new Date(currentDate);
+        endDate.setDate(endDate.getDate() + daysToCheck);
         
         let closestDuplicate = null;
         let minDaysDiff = daysToCheck + 1; // 初始值大于最大检测天数
@@ -943,20 +945,22 @@ class MenuApp {
                 continue;
             }
             
-            // 检查是否在时间范围内
-            if (menuDate >= startDate && menuDate < currentDate) {
+            // 检查是否在时间范围内（向前或向后）
+            if ((menuDate >= startDate && menuDate < currentDate) || (menuDate > currentDate && menuDate <= endDate)) {
                 const menu = this.menus[menuDateStr];
                 
                 // 检查早中晚三餐是否包含该菜品
                 for (const meal in menu) {
                     if (menu[meal].includes(dishName)) {
-                        // 计算天数差
+                        // 计算天数差，负数表示未来，正数表示过去
                         const timeDiff = currentDate - menuDate;
                         const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                        // 获取绝对值，用于比较最近距离
+                        const absDaysDiff = Math.abs(daysDiff);
                         
                         // 只记录最近的一次重复
-                        if (daysDiff < minDaysDiff) {
-                            minDaysDiff = daysDiff;
+                        if (absDaysDiff < minDaysDiff) {
+                            minDaysDiff = absDaysDiff;
                             closestDuplicate = {
                                 date: menuDateStr,
                                 daysDiff: daysDiff,
@@ -974,23 +978,26 @@ class MenuApp {
     
     // 获取相对天数描述
     getRelativeDays(days) {
-        if (days === 1) {
-            return '1天';
-        } else if (days === 7) {
-            return '1周';
-        } else if (days < 7) {
-            return `${days}天`;
-        } else if (days < 30) {
-            const weeks = Math.floor(days / 7);
-            const remainingDays = days % 7;
+        const absDays = Math.abs(days);
+        const isFuture = days < 0;
+        
+        if (absDays === 1) {
+            return isFuture ? '1天后' : '1天前';
+        } else if (absDays === 7) {
+            return isFuture ? '1周后' : '1周前';
+        } else if (absDays < 7) {
+            return `${absDays}天${isFuture ? '后' : '前'}`;
+        } else if (absDays < 30) {
+            const weeks = Math.floor(absDays / 7);
+            const remainingDays = absDays % 7;
             if (remainingDays === 0) {
-                return `${weeks}周`;
+                return `${weeks}周${isFuture ? '后' : '前'}`;
             } else {
-                return `${weeks}周${remainingDays}天`;
+                return `${weeks}周${remainingDays}天${isFuture ? '后' : '前'}`;
             }
         } else {
-            const months = Math.floor(days / 30);
-            return `${months}个月`;
+            const months = Math.floor(absDays / 30);
+            return `${months}个月${isFuture ? '后' : '前'}`;
         }
     }
     
@@ -1240,7 +1247,7 @@ class MenuApp {
                     // 检查重复菜品
                     const duplicateInfo = this.checkDuplicateDishes(date, dish.name);
                     if (duplicateInfo) {
-                        const confirmAdd = confirm(`⚠️ 检测到重复：${dish.name}在${duplicateInfo.relativeDays}前（${duplicateInfo.date}）已经吃过了，确定还要添加吗？`);
+                        const confirmAdd = confirm(`⚠️ 检测到重复：${dish.name}在${duplicateInfo.relativeDays}（${duplicateInfo.date}）已经安排了，确定还要添加吗？`);
                         if (!confirmAdd) {
                             return; // 用户取消添加
                         }
@@ -1298,7 +1305,7 @@ class MenuApp {
                 // 检查重复菜品
                 const duplicateInfo = this.checkDuplicateDishes(date, randomDish.name);
                 if (duplicateInfo) {
-                    const confirmAdd = confirm(`⚠️ 检测到重复：${randomDish.name}在${duplicateInfo.relativeDays}前（${duplicateInfo.date}）已经吃过了，确定还要添加吗？`);
+                    const confirmAdd = confirm(`⚠️ 检测到重复：${randomDish.name}在${duplicateInfo.relativeDays}（${duplicateInfo.date}）已经安排了，确定还要添加吗？`);
                     if (!confirmAdd) {
                         return; // 用户取消添加
                     }
