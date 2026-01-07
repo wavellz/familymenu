@@ -1039,6 +1039,36 @@ body {
     flex-wrap: wrap;
 }
 
+.setting-details {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    border: 2px solid #FFE4B5;
+}
+
+.setting-details p {
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.setting-select {
+    padding: 8px 15px;
+    font-size: 16px;
+    border: 2px solid #FFE4B5;
+    border-radius: 8px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.setting-select:focus {
+    outline: none;
+    border-color: #FF6B6B;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .app-container {

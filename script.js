@@ -6,6 +6,7 @@ class MenuApp {
         this.dishes = this.loadData('dishes', []);
         this.menus = this.loadData('menus', {});
         this.categories = this.loadData('categories', ['肉类', '蔬菜类', '汤类', '早餐']);
+        this.duplicateDays = this.loadData('duplicateDays', 3);
         
         // 确保早餐分类存在（兼容旧数据）
         if (!this.categories.includes('早餐')) {
@@ -192,6 +193,30 @@ class MenuApp {
                 this.closeDatePickerModal();
             }
         });
+
+        // 重复检测设置事件
+        const duplicateDaysSelect = document.getElementById('duplicate-days');
+        if (duplicateDaysSelect) {
+            // 初始化选择值
+            duplicateDaysSelect.value = this.duplicateDays;
+            
+            duplicateDaysSelect.addEventListener('change', (e) => {
+                this.duplicateDays = parseInt(e.target.value);
+                this.saveData('duplicateDays', this.duplicateDays);
+            });
+        } else {
+            // 如果设置元素还没有被渲染，等待DOM更新后再添加事件监听
+            setTimeout(() => {
+                const delayedDuplicateDaysSelect = document.getElementById('duplicate-days');
+                if (delayedDuplicateDaysSelect) {
+                    delayedDuplicateDaysSelect.value = this.duplicateDays;
+                    delayedDuplicateDaysSelect.addEventListener('change', (e) => {
+                        this.duplicateDays = parseInt(e.target.value);
+                        this.saveData('duplicateDays', this.duplicateDays);
+                    });
+                }
+            }, 100);
+        }
 
         // 设置事件
         document.getElementById('export-data-btn').addEventListener('click', () => {
@@ -896,6 +921,79 @@ class MenuApp {
         }
     }
     
+    // 检查重复菜品
+    checkDuplicateDishes(currentDateStr, dishName) {
+        // 将字符串日期转换为Date对象
+        const currentDate = new Date(currentDateStr);
+        
+        // 计算检测的时间范围
+        const daysToCheck = this.duplicateDays;
+        const startDate = new Date(currentDate);
+        startDate.setDate(startDate.getDate() - daysToCheck);
+        
+        let closestDuplicate = null;
+        let minDaysDiff = daysToCheck + 1; // 初始值大于最大检测天数
+        
+        // 遍历所有菜单日期
+        for (const menuDateStr in this.menus) {
+            const menuDate = new Date(menuDateStr);
+            
+            // 跳过当前日期
+            if (menuDate.toDateString() === currentDate.toDateString()) {
+                continue;
+            }
+            
+            // 检查是否在时间范围内
+            if (menuDate >= startDate && menuDate < currentDate) {
+                const menu = this.menus[menuDateStr];
+                
+                // 检查早中晚三餐是否包含该菜品
+                for (const meal in menu) {
+                    if (menu[meal].includes(dishName)) {
+                        // 计算天数差
+                        const timeDiff = currentDate - menuDate;
+                        const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                        
+                        // 只记录最近的一次重复
+                        if (daysDiff < minDaysDiff) {
+                            minDaysDiff = daysDiff;
+                            closestDuplicate = {
+                                date: menuDateStr,
+                                daysDiff: daysDiff,
+                                relativeDays: this.getRelativeDays(daysDiff)
+                            };
+                        }
+                        break; // 找到该日期的重复后，检查下一个日期
+                    }
+                }
+            }
+        }
+        
+        return closestDuplicate;
+    }
+    
+    // 获取相对天数描述
+    getRelativeDays(days) {
+        if (days === 1) {
+            return '1天';
+        } else if (days === 7) {
+            return '1周';
+        } else if (days < 7) {
+            return `${days}天`;
+        } else if (days < 30) {
+            const weeks = Math.floor(days / 7);
+            const remainingDays = days % 7;
+            if (remainingDays === 0) {
+                return `${weeks}周`;
+            } else {
+                return `${weeks}周${remainingDays}天`;
+            }
+        } else {
+            const months = Math.floor(days / 30);
+            return `${months}个月`;
+        }
+    }
+    
     // 添加餐次点击事件的通用方法
     addMealClickEvents() {
         // 处理月视图的餐次点击事件
@@ -924,15 +1022,10 @@ class MenuApp {
 
     // 打开菜单模态框（支持早中晚三餐点选，可选择特定餐次）
     openMenuModal(date, meal = null) {
-        // 初始化菜单结构（早中晚三餐）
-        if (!this.menus[date]) {
-            this.menus[date] = {
-                breakfast: [],
-                lunch: [],
-                dinner: []
-            };
-        }
-        const menu = this.menus[date];
+        // 深拷贝一份菜单数据，确保修改时不直接影响原始数据，只有保存时才会更新
+        const savedMenu = this.menus[date] || { breakfast: [], lunch: [], dinner: [] };
+        // 使用深拷贝创建临时菜单，避免修改未保存的数据
+        const menu = JSON.parse(JSON.stringify(savedMenu));
         
         // 检查是否已存在菜单模态框，如果存在则移除
         const existingModal = document.getElementById('menu-modal');
@@ -1116,6 +1209,8 @@ class MenuApp {
         
         // 保存菜单
         document.getElementById('save-menu-btn').addEventListener('click', () => {
+            // 将临时菜单的修改合并回原始数据
+            this.menus[date] = menu;
             this.saveData('menus', this.menus);
             this.renderMenuCalendar();
             modal.remove();
@@ -1123,11 +1218,15 @@ class MenuApp {
         
         // 取消
         document.getElementById('cancel-menu-btn').addEventListener('click', () => {
+            // 重新加载保存的菜单数据，丢弃未保存的修改
+            this.menus[date] = this.loadData('menus', {})[date] || { breakfast: [], lunch: [], dinner: [] };
             modal.remove();
         });
         
         // 关闭按钮
         document.getElementById('close-menu-modal').addEventListener('click', () => {
+            // 重新加载保存的菜单数据，丢弃未保存的修改
+            this.menus[date] = this.loadData('menus', {})[date] || { breakfast: [], lunch: [], dinner: [] };
             modal.remove();
         });
         
@@ -1138,7 +1237,19 @@ class MenuApp {
                 const dishId = e.target.dataset.dishId;
                 const dish = this.dishes.find(d => d.id === dishId);
                 if (dish && !menu[targetMeal].includes(dish.name)) {
+                    // 检查重复菜品
+                    const duplicateInfo = this.checkDuplicateDishes(date, dish.name);
+                    if (duplicateInfo) {
+                        const confirmAdd = confirm(`⚠️ 检测到重复：${dish.name}在${duplicateInfo.relativeDays}前（${duplicateInfo.date}）已经吃过了，确定还要添加吗？`);
+                        if (!confirmAdd) {
+                            return; // 用户取消添加
+                        }
+                    }
+                    
+                    // 更新临时菜单
                     menu[targetMeal].push(dish.name);
+                    // 同时更新原始数据，以便重新渲染时能看到选择
+                    this.menus[date] = menu;
                     // 重新渲染模态框前先移除当前模态框
                     modal.remove();
                     this.openMenuModal(date, meal); // 重新渲染模态框，保持当前餐次选择
@@ -1146,7 +1257,10 @@ class MenuApp {
             } else if (e.target.classList.contains('remove-dish')) {
                 const targetMeal = e.target.dataset.meal;
                 const dishName = e.target.dataset.dish;
+                // 更新临时菜单
                 menu[targetMeal] = menu[targetMeal].filter(d => d !== dishName);
+                // 同时更新原始数据，以便重新渲染时能看到选择
+                this.menus[date] = menu;
                 // 重新渲染模态框前先移除当前模态框
                 modal.remove();
                 this.openMenuModal(date, meal); // 重新渲染模态框，保持当前餐次选择
@@ -1181,14 +1295,27 @@ class MenuApp {
                 const randomIndex = Math.floor(Math.random() * unselectedDishes.length);
                 const randomDish = unselectedDishes[randomIndex];
                 
-                // 添加到当前餐次
+                // 检查重复菜品
+                const duplicateInfo = this.checkDuplicateDishes(date, randomDish.name);
+                if (duplicateInfo) {
+                    const confirmAdd = confirm(`⚠️ 检测到重复：${randomDish.name}在${duplicateInfo.relativeDays}前（${duplicateInfo.date}）已经吃过了，确定还要添加吗？`);
+                    if (!confirmAdd) {
+                        return; // 用户取消添加
+                    }
+                }
+                
+                // 更新临时菜单
                 menu[targetMeal].push(randomDish.name);
+                // 同时更新原始数据，以便重新渲染时能看到选择
+                this.menus[date] = menu;
                 
                 // 重新渲染模态框
                 modal.remove();
                 this.openMenuModal(date, meal);
             } else if (e.target === modal) {
                 // 点击模态框外部关闭
+                // 重新加载保存的菜单数据，丢弃未保存的修改
+                this.menus[date] = this.loadData('menus', {})[date] || { breakfast: [], lunch: [], dinner: [] };
                 modal.remove();
             }
         });

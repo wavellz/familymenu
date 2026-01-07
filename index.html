@@ -75,6 +75,25 @@
 
                 <div class="settings-content">
                     <div class="setting-item">
+                        <h3>重复检测</h3>
+                        <div class="setting-details">
+                            <p>设置重复检测的时间范围，避免反复吃同一道菜。</p>
+                            <div class="form-group">
+                                <label for="duplicate-days">检测范围：</label>
+                                <select id="duplicate-days" class="setting-select">
+                                    <option value="1">1天</option>
+                                    <option value="2">2天</option>
+                                    <option value="3" selected>3天</option>
+                                    <option value="5">5天</option>
+                                    <option value="7">1周</option>
+                                    <option value="14">2周</option>
+                                    <option value="30">1个月</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
                         <h3>数据管理</h3>
                         <div class="setting-buttons">
                             <button id="export-data-btn" class="secondary-btn">📤 导出数据</button>
