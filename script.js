@@ -314,7 +314,11 @@ class MenuApp {
         }
 
         // 渲染分类标签
-        let categoryHtml = `<button class="category-tag ${category === 'all' ? 'active' : ''}" data-category="all">全部</button>`;
+        let categoryHtml = `
+            <div class="category-tag-container">
+                <button class="category-tag ${category === 'all' ? 'active' : ''}" data-category="all">全部</button>
+            </div>
+        `;
         this.categories.forEach(cat => {
             categoryHtml += `
                 <div class="category-tag-container">
@@ -326,7 +330,11 @@ class MenuApp {
                 </div>
             `;
         });
-        categoryHtml += `<button class="category-tag add-category" id="add-category-btn">+ 自定义</button>`;
+        categoryHtml += `
+            <div class="category-tag-container">
+                <button class="category-tag add-category" id="add-category-btn">+ 自定义</button>
+            </div>
+        `;
         categoryTags.innerHTML = categoryHtml;
 
         // 重新绑定分类标签事件
