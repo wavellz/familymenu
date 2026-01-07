@@ -12,8 +12,8 @@
         <header class="app-header">
             <h1 class="app-title">🍽️ 家庭菜单</h1>
             <nav class="app-nav">
-            <button class="nav-btn active" data-tab="dish-library">菜品库</button>
-            <button class="nav-btn" data-tab="menu-calendar">菜单日历</button>
+            <button class="nav-btn" data-tab="dish-library">菜品库</button>
+            <button class="nav-btn active" data-tab="menu-calendar">菜单日历</button>
             <button class="nav-btn" data-tab="settings">设置</button>
         </nav>
         </header>
@@ -21,7 +21,7 @@
         <!-- 主要内容区域 -->
         <main class="app-main">
             <!-- 菜品库模块 -->
-            <section id="dish-library" class="tab-content active">
+            <section id="dish-library" class="tab-content">
                 <div class="section-header">
                     <h2>菜品库</h2>
                     <div class="search-add">
@@ -46,7 +46,7 @@
             </section>
 
             <!-- 菜单日历模块 -->
-            <section id="menu-calendar" class="tab-content">
+            <section id="menu-calendar" class="tab-content active">
                 <div class="section-header">
                     <h2>菜单日历</h2>
                     <div class="calendar-controls">
@@ -54,9 +54,9 @@
                         <div id="current-month" class="month-display clickable" title="点击选择日期"></div>
                         <button id="next-month" class="control-btn">›</button>
                         <div class="view-switcher">
-                            <button class="view-btn active" data-view="month">月</button>
+                            <button class="view-btn" data-view="month">月</button>
                             <button class="view-btn" data-view="week">周</button>
-                            <button class="view-btn" data-view="day">日</button>
+                            <button class="view-btn active" data-view="day">日</button>
                         </div>
                     </div>
                 </div>

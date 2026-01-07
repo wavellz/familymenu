@@ -21,10 +21,10 @@ class MenuApp {
         });
         this.saveData('categories', this.categories);
         
-        this.currentTab = 'dish-library';
+        this.currentTab = 'menu-calendar';
         this.currentDate = new Date();
         this.editingDishId = null;
-        this.currentView = 'month'; // 月视图、周视图、日视图
+        this.currentView = 'day'; // 月视图、周视图、日视图 - 默认日视图
         
         this.init();
     }
@@ -644,6 +644,11 @@ class MenuApp {
     switchView(view) {
         this.currentView = view;
         
+        // 如果切换到日视图，默认显示当前时间日期
+        if (view === 'day') {
+            this.currentDate = new Date();
+        }
+        
         // 更新视图按钮状态
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -664,27 +669,31 @@ class MenuApp {
         const day = this.currentDate.getDate();
         
         // 更新标题显示
-        if (this.currentView === 'day') {
-            monthDisplay.textContent = `${year}年${month + 1}月${day}日`;
-        } else if (this.currentView === 'week') {
-            // 计算本周第一天和最后一天
-            const firstDayOfWeek = new Date(year, month, day);
-            const dayOfWeek = firstDayOfWeek.getDay();
-            firstDayOfWeek.setDate(day - dayOfWeek);
-            const lastDayOfWeek = new Date(firstDayOfWeek);
-            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
-            monthDisplay.textContent = `${year}年${month + 1}月${firstDayOfWeek.getDate()}-${lastDayOfWeek.getDate()}日`;
-        } else {
-            monthDisplay.textContent = `${year}年${month + 1}月`;
+        if (monthDisplay) {
+            if (this.currentView === 'day') {
+                monthDisplay.textContent = `${year}年${month + 1}月${day}日`;
+            } else if (this.currentView === 'week') {
+                // 计算本周第一天和最后一天
+                const firstDayOfWeek = new Date(year, month, day);
+                const dayOfWeek = firstDayOfWeek.getDay();
+                firstDayOfWeek.setDate(day - dayOfWeek);
+                const lastDayOfWeek = new Date(firstDayOfWeek);
+                lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+                monthDisplay.textContent = `${year}年${month + 1}月${firstDayOfWeek.getDate()}-${lastDayOfWeek.getDate()}日`;
+            } else {
+                monthDisplay.textContent = `${year}年${month + 1}月`;
+            }
         }
 
         // 根据当前视图渲染不同的日历
-        if (this.currentView === 'day') {
-            this.renderDayView(container, year, month, day);
-        } else if (this.currentView === 'week') {
-            this.renderWeekView(container, year, month, day);
-        } else {
-            this.renderMonthView(container, year, month);
+        if (container) {
+            if (this.currentView === 'day') {
+                this.renderDayView(container, year, month, day);
+            } else if (this.currentView === 'week') {
+                this.renderWeekView(container, year, month, day);
+            } else {
+                this.renderMonthView(container, year, month);
+            }
         }
     }
 
