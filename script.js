@@ -940,7 +940,10 @@ class MenuApp {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const menu = this.menus[dateStr] || { breakfast: [], lunch: [], dinner: [] };
         
-        let calendarHtml = '<div class="day-view-container">';
+        let calendarHtml = `
+            <div class="day-view-container">
+                <h2>${year}年${month + 1}月${day}日 菜单</h2>
+        `;
         
         const meals = [
             { key: 'breakfast', name: '早餐', icon: '🍞', dishes: menu.breakfast },
@@ -949,20 +952,66 @@ class MenuApp {
         ];
         
         meals.forEach(meal => {
-            calendarHtml += `<div class="day-meal-section">
-                <div class="day-meal-header">
-                    <h3>${meal.icon} ${meal.name}</h3>
-                    <button class="primary-btn add-meal-btn" data-date="${dateStr}" data-meal="${meal.key}">+ 添加菜品</button>
+            calendarHtml += `
+                <div class="day-meal-section">
+                    <div class="day-meal-header">
+                        <h3>${meal.icon} ${meal.name}</h3>
+                        <button class="primary-btn add-meal-btn" data-date="${dateStr}" data-meal="${meal.key}">+ 添加菜品</button>
+                    </div>
+                    <div class="day-meal-content">
+            `;
+            
+            if (meal.dishes.length > 0) {
+                // 使用flex布局，实现一行多个菜品，自适应各种设备
+                calendarHtml += `
+                    <div class="day-dish-grid" style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                        padding: 10px 0;
+                    ">
+                `;
+                
+                // 为每个菜品生成带有柔和颜色的模块化HTML
+                meal.dishes.forEach(dish => {
+                    calendarHtml += `
+                        <div class="day-dish-item" style="
+                            padding: 12px 18px;
+                            background-color: #E0F7FA;
+                            color: #00695C;
+                            border-radius: 8px;
+                            font-size: 16px;
+                            font-weight: 600;
+                            box-shadow: 0 2px 8px rgba(0, 105, 92, 0.15);
+                            border: 1px solid #B2EBF2;
+                            transition: all 0.3s ease;
+                            flex: 1;
+                            min-width: 150px;
+                            max-width: calc(50% - 5px);
+                            text-align: center;
+                            position: relative;
+                            padding-left: 35px;
+                            box-sizing: border-box;
+                        ">
+                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px;">🍽️</span>
+                            ${dish}
+                        </div>
+                    `;
+                });
+                
+                calendarHtml += `
+                    </div>
+                `;
+            } else {
+                calendarHtml += `
+                    <div class="no-dishes">暂无菜品，点击添加</div>
+                `;
+            }
+            
+            calendarHtml += `
+                    </div>
                 </div>
-                <div class="day-meal-content">
-                    ${meal.dishes.length > 0 ? 
-                        `<div class="day-dish-list">
-                            ${meal.dishes.map(dish => `<div class="day-dish-item">${dish}</div>`).join('')}
-                        </div>` : 
-                        `<div class="no-dishes">暂无菜品，点击添加</div>`
-                    }
-                </div>
-            </div>`;
+            `;
         });
         
         calendarHtml += '</div>';

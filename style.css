@@ -1512,19 +1512,40 @@ body {
     gap: clamp(8px, 1.5vw, 12px);
 }
 
-.day-dish-item {
-    padding: clamp(10px, 1.5vw, 15px);
-    background-color: #E0F7FA;
-    border-radius: clamp(6px, 1vw, 10px);
-    font-size: clamp(14px, 2vw, 16px);
-    color: #00695C;
-    border: 1px solid #B2EBF2;
-    transition: all 0.3s ease;
+/* 日视图菜品项 - 使用更具体的选择器确保样式优先级 */
+.day-view-container .day-meal-section .day-meal-content .day-dish-list .day-dish-item {
+    padding: 18px !important;
+    background-color: #FF6B6B !important;
+    border-radius: 12px !important;
+    font-size: 20px !important;
+    color: white !important;
+    border: 3px solid #FF5252 !important;
+    transition: all 0.3s ease !important;
+    font-weight: bold !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3) !important;
+    position: relative !important;
+    padding-left: 50px !important;
+    margin: 10px 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
 }
 
-.day-dish-item:hover {
-    background-color: #B2EBF2;
-    transform: translateX(5px);
+.day-view-container .day-meal-section .day-meal-content .day-dish-list .day-dish-item::before {
+    content: '🍽️' !important;
+    position: absolute !important;
+    left: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 24px !important;
+    z-index: 1 !important;
+}
+
+.day-view-container .day-meal-section .day-meal-content .day-dish-list .day-dish-item:hover {
+    background-color: #FF5252 !important;
+    transform: translateY(-3px) translateX(8px) !important;
+    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4) !important;
+    border-color: #FF1744 !important;
+    font-size: 21px !important;
 }
 
 .no-dishes {
