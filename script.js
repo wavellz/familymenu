@@ -1470,28 +1470,159 @@ class MenuApp {
                 
                 // 过滤掉已选择的菜品，避免重复添加
                 const selectedDishNames = menu[targetMeal];
-                const unselectedDishes = availableDishes.filter(dish => !selectedDishNames.includes(dish.name));
                 
-                if (unselectedDishes.length === 0) {
-                    alert('当前餐次已选择所有可用菜品');
-                    return;
+                // 1. 先获取近期已使用的菜品列表
+                const recentlyUsedDishes = new Set();
+                const currentDate = new Date(date);
+                const startDate = new Date(currentDate);
+                startDate.setDate(startDate.getDate() - this.duplicateDays);
+                const endDate = new Date(currentDate);
+                endDate.setDate(endDate.getDate() + this.duplicateDays);
+                
+                // 遍历所有菜单日期，收集近期已使用的菜品
+                for (const menuDateStr in this.menus) {
+                    const menuDate = new Date(menuDateStr);
+                    // 跳过当前日期
+                    if (menuDate.toDateString() === currentDate.toDateString()) {
+                        continue;
+                    }
+                    // 检查是否在时间范围内
+                    if ((menuDate >= startDate && menuDate < currentDate) || (menuDate > currentDate && menuDate <= endDate)) {
+                        const menu = this.menus[menuDateStr];
+                        // 检查早中晚三餐是否包含该菜品
+                        for (const meal in menu) {
+                            menu[meal].forEach(dishName => {
+                                recentlyUsedDishes.add(dishName);
+                            });
+                        }
+                    }
                 }
                 
-                // 随机选择一个未选择的菜品
-                const randomIndex = Math.floor(Math.random() * unselectedDishes.length);
-                const randomDish = unselectedDishes[randomIndex];
+                // 2. 过滤掉近期已使用的菜品和当前已选择的菜品
+                let unselectedDishes = availableDishes.filter(dish => 
+                    !selectedDishNames.includes(dish.name) && 
+                    !recentlyUsedDishes.has(dish.name)
+                );
                 
-                // 检查重复菜品
-                const duplicateInfo = this.checkDuplicateDishes(date, randomDish.name);
-                if (duplicateInfo) {
-                    const confirmAdd = confirm(`⚠️ 检测到重复：${randomDish.name}在${duplicateInfo.relativeDays}（${duplicateInfo.date}）已经安排了，确定还要添加吗？`);
+                // 如果没有可用菜品，尝试放松条件，包含近期已使用的菜品
+                if (unselectedDishes.length === 0) {
+                    // 只过滤掉当前已选择的菜品，保留近期已使用的菜品
+                    unselectedDishes = availableDishes.filter(dish => !selectedDishNames.includes(dish.name));
+                    
+                    if (unselectedDishes.length === 0) {
+                        alert('当前餐次已选择所有可用菜品');
+                        return;
+                    }
+                }
+                
+                // 根据餐次确定推荐数量和营养搭配原则
+                const recommendCount = targetMeal === 'breakfast' ? 2 : 4;
+                const dishesToAdd = [];
+                
+                // 早餐营养搭配：2个不同类型的早餐（如主食+饮品/小菜）
+                if (targetMeal === 'breakfast') {
+                    // 先清空当前早餐菜品，重新推荐
+                    menu[targetMeal] = [];
+                    
+                    // 随机选择2个不同的早餐菜品
+                    for (let i = 0; i < Math.min(recommendCount, unselectedDishes.length); i++) {
+                        const randomIndex = Math.floor(Math.random() * unselectedDishes.length);
+                        const randomDish = unselectedDishes[randomIndex];
+                        dishesToAdd.push(randomDish);
+                        // 从可用列表中移除已选菜品，避免重复
+                        unselectedDishes = unselectedDishes.filter(dish => dish.id !== randomDish.id);
+                    }
+                } else {
+                    // 午餐/晚餐营养搭配：4个菜，荤素搭配（1-2荤，2-3素，包含汤品更佳）
+                    // 先清空当前菜品，重新推荐
+                    menu[targetMeal] = [];
+                    
+                    // 分类菜品，便于营养搭配
+                    const meatDishes = unselectedDishes.filter(dish => 
+                        ['肉类', '鱼类'].includes(dish.category)
+                    );
+                    const vegDishes = unselectedDishes.filter(dish => 
+                        ['蔬菜类', '豆制品类', '菌菇类'].includes(dish.category)
+                    );
+                    const soupDishes = unselectedDishes.filter(dish => 
+                        dish.category === '汤品类'
+                    );
+                    const stapleDishes = unselectedDishes.filter(dish => 
+                        dish.category === '主食类'
+                    );
+                    
+                    // 开始智能搭配
+                    // 1. 优先添加1个汤品
+                    if (soupDishes.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * soupDishes.length);
+                        dishesToAdd.push(soupDishes[randomIndex]);
+                        // 从可用列表中移除已选菜品
+                        unselectedDishes = unselectedDishes.filter(dish => dish.id !== soupDishes[randomIndex].id);
+                    }
+                    
+                    // 2. 添加1-2个荤菜
+                    const meatCount = Math.min(2, meatDishes.length, recommendCount - dishesToAdd.length);
+                    for (let i = 0; i < meatCount; i++) {
+                        if (meatDishes.length === 0) break;
+                        const randomIndex = Math.floor(Math.random() * meatDishes.length);
+                        dishesToAdd.push(meatDishes[randomIndex]);
+                        // 从可用列表中移除已选菜品
+                        unselectedDishes = unselectedDishes.filter(dish => dish.id !== meatDishes[randomIndex].id);
+                        meatDishes.splice(randomIndex, 1);
+                    }
+                    
+                    // 3. 添加2-3个素菜
+                    const vegCount = Math.min(3, vegDishes.length, recommendCount - dishesToAdd.length);
+                    for (let i = 0; i < vegCount; i++) {
+                        if (vegDishes.length === 0) break;
+                        const randomIndex = Math.floor(Math.random() * vegDishes.length);
+                        dishesToAdd.push(vegDishes[randomIndex]);
+                        // 从可用列表中移除已选菜品
+                        unselectedDishes = unselectedDishes.filter(dish => dish.id !== vegDishes[randomIndex].id);
+                        vegDishes.splice(randomIndex, 1);
+                    }
+                    
+                    // 4. 如果还有名额，添加主食
+                    if (dishesToAdd.length < recommendCount && stapleDishes.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * stapleDishes.length);
+                        dishesToAdd.push(stapleDishes[randomIndex]);
+                        // 从可用列表中移除已选菜品
+                        unselectedDishes = unselectedDishes.filter(dish => dish.id !== stapleDishes[randomIndex].id);
+                    }
+                    
+                    // 5. 如果还有名额，随机添加其他菜品
+                    while (dishesToAdd.length < recommendCount && unselectedDishes.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * unselectedDishes.length);
+                        dishesToAdd.push(unselectedDishes[randomIndex]);
+                        unselectedDishes.splice(randomIndex, 1);
+                    }
+                }
+                
+                // 检查所有要添加的菜品是否在近期已使用
+                let canAddAll = true;
+                let needConfirmDishes = [];
+                
+                // 检查是否有放松条件后仍使用的近期菜品
+                for (const dish of dishesToAdd) {
+                    if (recentlyUsedDishes.has(dish.name)) {
+                        needConfirmDishes.push(dish);
+                    }
+                }
+                
+                // 如果有需要确认的菜品，统一确认
+                if (needConfirmDishes.length > 0) {
+                    const dishNames = needConfirmDishes.map(dish => dish.name).join('、');
+                    const confirmAdd = confirm(`⚠️ 检测到以下菜品近期已使用：${dishNames}，确定还要添加吗？`);
                     if (!confirmAdd) {
                         return; // 用户取消添加
                     }
                 }
                 
                 // 更新临时菜单
-                menu[targetMeal].push(randomDish.name);
+                dishesToAdd.forEach(dish => {
+                    menu[targetMeal].push(dish.name);
+                });
+                
                 // 同时更新原始数据，以便重新渲染时能看到选择
                 this.menus[date] = menu;
                 
