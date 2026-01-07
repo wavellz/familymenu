@@ -386,6 +386,75 @@ body {
     color: #00695C;
 }
 
+/* 分类标签容器样式 */
+.category-tag-container {
+    display: inline-block;
+    position: relative;
+    margin-right: 15px;
+    margin-bottom: 10px;
+}
+
+/* 分类操作按钮组 */
+.category-actions {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    display: flex;
+    gap: 3px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+}
+
+/* 鼠标悬停时显示操作按钮 */
+.category-tag-container:hover .category-actions {
+    opacity: 1;
+}
+
+/* 分类编辑按钮样式 */
+.edit-category-btn {
+    padding: 3px 6px;
+    font-size: 11px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+    background-color: #FFD93D;
+    min-width: 35px;
+    text-align: center;
+    line-height: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.edit-category-btn:hover {
+    background-color: #FFC107;
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+/* 分类删除按钮样式 */
+.delete-category-btn {
+    padding: 3px 6px;
+    font-size: 11px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+    background-color: #FF6B6B;
+    min-width: 35px;
+    text-align: center;
+    line-height: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.delete-category-btn:hover {
+    background-color: #FF5252;
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
 /* 分类标签样式扩展 */
 .category-item {
     display: inline-block;
@@ -500,39 +569,50 @@ body {
 .dish-actions {
     display: flex;
     justify-content: center;
-    gap: clamp(8px, 1.5vw, 10px);
+    gap: clamp(6px, 1.2vw, 8px);
     margin-top: auto;
     padding-top: clamp(10px, 1.5vw, 15px);
 }
 
 .dish-action-btn {
-    padding: clamp(6px, 1.2vw, 8px) clamp(10px, 2vw, 12px);
-    font-size: clamp(12px, 2vw, 14px);
+    padding: clamp(5px, 1vw, 7px) clamp(8px, 1.5vw, 10px);
+    font-size: clamp(11px, 1.8vw, 13px);
     border: none;
-    border-radius: 15px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     flex: 1;
-    min-width: 80px;
-    max-width: 100px;
+    min-width: 65px;
+    max-width: 90px;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    line-height: 1;
 }
 
 .edit-btn {
     background-color: #FFD93D;
     color: #333;
+    border: 1px solid #FFE4B5;
 }
 
 .edit-btn:hover {
     background-color: #FFC107;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    border-color: #FFD93D;
 }
 
 .delete-btn {
     background-color: #FF6B6B;
     color: white;
+    border: 1px solid #FFE4B5;
 }
 
 .delete-btn:hover {
     background-color: #FF5252;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    border-color: #FF6B6B;
 }
 
 /* 日历控制 */
