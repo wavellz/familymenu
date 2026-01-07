@@ -1206,6 +1206,7 @@ class MenuApp {
                     ${mealSections}
                 </div>
                 <div class="modal-footer">
+                    <button id="clear-menu-btn" class="secondary-btn" style="background-color: #FF6B6B; color: white;">清除菜单</button>
                     <button id="save-menu-btn" class="primary-btn">保存菜单</button>
                     <button id="cancel-menu-btn" class="secondary-btn">取消</button>
                 </div>
@@ -1221,6 +1222,25 @@ class MenuApp {
             this.saveData('menus', this.menus);
             this.renderMenuCalendar();
             modal.remove();
+        });
+        
+        // 清除菜单
+        document.getElementById('clear-menu-btn').addEventListener('click', () => {
+            // 只清除当前时刻的菜单
+            if (meal) {
+                // 单个餐次清除
+                menu[meal] = [];
+            } else {
+                // 所有餐次清除
+                menu.breakfast = [];
+                menu.lunch = [];
+                menu.dinner = [];
+            }
+            // 更新原始数据
+            this.menus[date] = menu;
+            // 重新渲染模态框，显示清空后的状态
+            modal.remove();
+            this.openMenuModal(date, meal);
         });
         
         // 取消
