@@ -5,21 +5,31 @@ class MenuApp {
     constructor() {
         this.dishes = this.loadData('dishes', []);
         this.menus = this.loadData('menus', {});
-        this.categories = this.loadData('categories', ['肉类', '蔬菜类', '汤类', '早餐']);
+        this.categories = this.loadData('categories', ['肉类', '蔬菜类', '汤类', '早餐类']);
         this.duplicateDays = this.loadData('duplicateDays', 3);
         
-        // 确保早餐分类存在（兼容旧数据）
-        if (!this.categories.includes('早餐')) {
-            this.categories.push('早餐');
+        // 将旧的'早餐'分类统一为'早餐类'
+        // 1. 更新分类列表
+        if (this.categories.includes('早餐')) {
+            this.categories = this.categories.map(cat => cat === '早餐' ? '早餐类' : cat);
             this.saveData('categories', this.categories);
         }
         
-        // 确保所有菜品的分类都存在于categories数组中
+        // 2. 更新所有菜品的分类
+        let categoriesUpdated = false;
         this.dishes.forEach(dish => {
+            if (dish.category === '早餐') {
+                dish.category = '早餐类';
+                categoriesUpdated = true;
+            }
             if (dish.category && !this.categories.includes(dish.category)) {
                 this.categories.push(dish.category);
             }
         });
+        
+        if (categoriesUpdated) {
+            this.saveData('dishes', this.dishes);
+        }
         
         // 如果菜品为空，自动生成一些初始菜品
         if (this.dishes.length === 0) {
@@ -707,11 +717,11 @@ class MenuApp {
             { id: '15', name: '蔬菜汤', category: '汤类', createdAt: new Date().toISOString() },
             
             // 早餐类
-            { id: '16', name: '豆浆油条', category: '早餐', createdAt: new Date().toISOString() },
-            { id: '17', name: '包子馒头', category: '早餐', createdAt: new Date().toISOString() },
-            { id: '18', name: '鸡蛋灌饼', category: '早餐', createdAt: new Date().toISOString() },
-            { id: '19', name: '粥品', category: '早餐', createdAt: new Date().toISOString() },
-            { id: '20', name: '面包牛奶', category: '早餐', createdAt: new Date().toISOString() }
+            { id: '16', name: '豆浆油条', category: '早餐类', createdAt: new Date().toISOString() },
+            { id: '17', name: '包子馒头', category: '早餐类', createdAt: new Date().toISOString() },
+            { id: '18', name: '鸡蛋灌饼', category: '早餐类', createdAt: new Date().toISOString() },
+            { id: '19', name: '粥品', category: '早餐类', createdAt: new Date().toISOString() },
+            { id: '20', name: '面包牛奶', category: '早餐类', createdAt: new Date().toISOString() }
         ];
         
         // 设置初始菜品
@@ -973,8 +983,11 @@ class MenuApp {
         const modal = document.getElementById('date-picker-modal');
         const dateInput = document.getElementById('date-picker-input');
         
-        // 设置默认日期为当前选择的日期
-        const formattedDate = this.currentDate.toISOString().split('T')[0];
+        // 设置默认日期为当前选择的日期，使用本地时区格式化
+        const year = this.currentDate.getFullYear();
+        const month = String(this.currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(this.currentDate.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
         dateInput.value = formattedDate;
         
         modal.classList.add('active');
@@ -1029,19 +1042,39 @@ class MenuApp {
                 // 检查早中晚三餐是否包含该菜品
                 for (const meal in menu) {
                     if (menu[meal].includes(dishName)) {
+                        // 确保只比较日期部分，忽略时间部分
+                        const currentDateOnly = new Date(currentDate);
+                        currentDateOnly.setHours(0, 0, 0, 0);
+                        
+                        const menuDateOnly = new Date(menuDate);
+                        menuDateOnly.setHours(0, 0, 0, 0);
+                        
                         // 计算天数差，负数表示未来，正数表示过去
-                        const timeDiff = currentDate - menuDate;
-                        const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                        const timeDiff = currentDateOnly - menuDateOnly;
+                        const daysDiff = Math.round(timeDiff / (1000 * 60 * 60 * 24));
+                        
+                        // 确保天数差计算正确，修复可能的时区问题
+                        const currentDateObj = new Date(currentDateOnly);
+                        const menuDateObj = new Date(menuDateOnly);
+                        
+                        // 使用日期比较方法重新计算天数差，确保准确性
+                        const yearDiff = currentDateObj.getFullYear() - menuDateObj.getFullYear();
+                        const monthDiff = currentDateObj.getMonth() - menuDateObj.getMonth();
+                        const dayDiff = currentDateObj.getDate() - menuDateObj.getDate();
+                        
+                        // 计算总天数差，考虑闰年和月份天数差异
+                        const daysDiffAccurate = Math.round((currentDateOnly - menuDateOnly) / (1000 * 60 * 60 * 24));
+                        const finalDaysDiff = daysDiffAccurate;
                         // 获取绝对值，用于比较最近距离
-                        const absDaysDiff = Math.abs(daysDiff);
+                        const absDaysDiff = Math.abs(finalDaysDiff);
                         
                         // 只记录最近的一次重复
                         if (absDaysDiff < minDaysDiff) {
                             minDaysDiff = absDaysDiff;
                             closestDuplicate = {
                                 date: menuDateStr,
-                                daysDiff: daysDiff,
-                                relativeDays: this.getRelativeDays(daysDiff)
+                                daysDiff: finalDaysDiff,
+                                relativeDays: this.getRelativeDays(finalDaysDiff)
                             };
                         }
                         break; // 找到该日期的重复后，检查下一个日期
@@ -1134,8 +1167,8 @@ class MenuApp {
             
             // 根据餐次过滤菜品
             const baseDishes = meal === 'breakfast' 
-                ? this.dishes.filter(dish => dish.category === '早餐')
-                : this.dishes.filter(dish => dish.category !== '早餐');
+                ? this.dishes.filter(dish => dish.category === '早餐类')
+                : this.dishes.filter(dish => dish.category !== '早餐类');
             
             let dishSelectorHtml = '';
             
@@ -1148,7 +1181,7 @@ class MenuApp {
             } else {
                 // 午餐和晚餐按分类组织菜品
                 // 获取当前餐次可用的分类（排除早餐）
-                const availableCategories = [...new Set(this.dishes.filter(d => d.category !== '早餐').map(d => d.category))];
+                const availableCategories = [...new Set(this.dishes.filter(d => d.category !== '早餐类').map(d => d.category))];
                 
                 availableCategories.forEach(category => {
                     // 按分类过滤菜品
@@ -1185,10 +1218,10 @@ class MenuApp {
             `;
         } else {
             // 早餐直接显示所有早餐菜品
-            const breakfastDishes = this.dishes.filter(dish => dish.category === '早餐');
+            const breakfastDishes = this.dishes.filter(dish => dish.category === '早餐类');
             
             // 获取可用分类（排除早餐）
-            const availableCategories = [...new Set(this.dishes.filter(d => d.category !== '早餐').map(d => d.category))];
+            const availableCategories = [...new Set(this.dishes.filter(d => d.category !== '早餐类').map(d => d.category))];
             
             // 生成午餐菜品选择器（按分类）
             let lunchSelectorHtml = '';
@@ -1375,10 +1408,10 @@ class MenuApp {
                 let availableDishes;
                 if (targetMeal === 'breakfast') {
                     // 早餐只能选择早餐分类的菜品
-                    availableDishes = this.dishes.filter(dish => dish.category === '早餐');
+                    availableDishes = this.dishes.filter(dish => dish.category === '早餐类');
                 } else {
                     // 午餐和晚餐不能选择早餐分类的菜品
-                    availableDishes = this.dishes.filter(dish => dish.category !== '早餐');
+                    availableDishes = this.dishes.filter(dish => dish.category !== '早餐类');
                 }
                 
                 if (availableDishes.length === 0) {
@@ -1438,7 +1471,13 @@ class MenuApp {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `家庭菜单数据_${new Date().toISOString().split('T')[0]}.json`;
+        // 使用本地时区格式化文件名
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+        a.download = `家庭菜单数据_${formattedDate}.json`;
         a.click();
         URL.revokeObjectURL(url);
     }
